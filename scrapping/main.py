@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.options import Options
 import os
 from dotenv import load_dotenv
 from openai import OpenAI  # new import style
+from stripe_payment import router as stripe_router
+
 
 load_dotenv()
 
@@ -23,6 +25,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include stripe routes under /stripe prefix
+app.include_router(stripe_router, prefix="/stripe")
 
 class ScrapeRequest(BaseModel):
     url: str
