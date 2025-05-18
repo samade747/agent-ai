@@ -1,3 +1,4 @@
+#  main.py
 from dotenv import load_dotenv
 import os
 import re
@@ -30,17 +31,19 @@ class ScrapeResponse(BaseModel):
 
 # ─── HELPERS ──────────────────────────────────────────────
 def fetch_page(url: str, timeout: int = 15000) -> str:
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        try:
+    print("Launching browser...")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            print("Browser launched.")
+            page = browser.new_page()
             page.goto(url, timeout=timeout)
             page.wait_for_load_state("networkidle", timeout=timeout)
-        except PlaywrightTimeout:
-            pass
-        html = page.content()
-        browser.close()
-    return html
+            html = page.content()
+            browser.close()
+            return html
+    except Exception as e:
+        raise RuntimeError(f"Playwright launch error: {str(e)}")
 
 def html_to_text(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
@@ -63,13 +66,38 @@ def ai_extract(text: str, prompt: str) -> str:
     return resp.choices[0].message.content.strip()
 
 # ─── ROUTES ───────────────────────────────────────────────
+# @app.post("/scrape", response_model=ScrapeResponse)
+# def scrape(req: ScrapeRequest):
+
+
+    is_paid = (req.license_key == PAID_LICENSE_KEY)
+
+    # 1. fetch
+    try:
+        html = fetch_page(req.url)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fetch error: {e}")
+
+    # 2. clean
+    text = html_to_text(html)
+
+    # 3. extract
+    try:
+        raw = ai_extract(text, req.prompt)
+        parsed = json.loads(raw)
+        return {"result": parsed}
+    except json.JSONDecodeError:
+        return {"result": raw}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI error: {e}")
+
 @app.post("/scrape", response_model=ScrapeResponse)
 def scrape(req: ScrapeRequest):
     is_paid = (req.license_key == PAID_LICENSE_KEY)
 
     # 1. fetch
     try:
-        html = fetch_page(req.url)
+        html = fetch_page(str(req.url))  # <-- FIXED HERE
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fetch error: {e}")
 
@@ -92,7 +120,7 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=False,
+        reload=True,
     )
 
 
