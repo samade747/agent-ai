@@ -1,9 +1,10 @@
-# requirements.txt
-fastapi>=0.95.0
-uvicorn>=0.22.0
-streamlit>=1.24.0
-openai>=0.27.0
-playwright>=1.36.0
-beautifulsoup4>=4.12.2
-python-dotenv>=1.0.0
-httpx>=0.24.0
+streamlit
+fastapi
+uvicorn
+openai
+beautifulsoup4
+httpx
+python-dotenv
+pydantic
+undetected-chromedriver
+selenium
