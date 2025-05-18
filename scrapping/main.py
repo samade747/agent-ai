@@ -45,6 +45,7 @@ def fetch_page(url: str, timeout: int = 15000) -> str:
     except Exception as e:
         raise RuntimeError(f"Playwright launch error: {str(e)}")
 
+
 def html_to_text(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup(["script", "style", "noscript"]):
