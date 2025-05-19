@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+python-dotenv
+openai
+bs4
+undetected-chromedriver
+selenium
+stripe
